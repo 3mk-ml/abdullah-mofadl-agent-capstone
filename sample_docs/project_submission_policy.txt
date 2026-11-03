@@ -1,0 +1,18 @@
+University AI Lab - Sample Project Submission Policy
+Document status: Synthetic capstone test fixture, not a real institutional policy.
+
+Section 1 - Deliverables
+The student must submit a public source-code link, a live demo URL, an agent specification,
+a cost analysis, and execution traces. Include a trace of an explicit failure.
+
+Section 2 - Deadline
+For this fictional policy, the submission deadline is November 1, 2026 at 11:59 PM Yemen time.
+A request for an extension must be sent by October 30, 2026.
+
+Section 3 - Access and safety
+Never include an API key, real customer data, or other credentials in a public repository.
+Any change to permanent user files or persistent memory requires documented approval.
+
+Section 4 - Review
+The reviewer will check whether tool calls are visible and whether the system stops at
+its declared maximum turns and budget. A documented failure is required evidence.
