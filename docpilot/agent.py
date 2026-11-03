@@ -108,7 +108,7 @@ class OpenAIBackend:
         response = self.client.responses.create(
             model=self.model, instructions=SYSTEM_PROMPT, tools=tools, input=history,
             reasoning={"effort": "low"}, max_output_tokens=max_output_tokens,
-            store=False
+            include=["reasoning.encrypted_content"], store=False
         )
         usage = response.usage
         detail = getattr(usage, "input_tokens_details", None)
@@ -194,7 +194,7 @@ class Agent:
         if trace_name and not re.fullmatch(r"[a-z0-9_-]{1,80}\.jsonl", trace_name):
             raise ValueError("Trace filename is invalid")
         name = trace_name or f"run_{run_id}.jsonl"
-        output_dir = Path(trace_dir) if trace_dir is not None else Path(__file__).resolve().parents[1] / "runtime" / "traces"
+        output_dir = Path(trace_dir) if trace_dir is not None else Path(self.store.db_path).parent / "traces"
         state = AgentState(session_id, run_id, [{"role": "user", "content": question}],
                            output_dir / name, getattr(self.backend, "name", "unknown"),
                            int(max_turns), float(budget_usd), permission_policy)

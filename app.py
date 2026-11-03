@@ -2,6 +2,7 @@
 from __future__ import annotations
 import json
 import os
+import hmac
 import uuid
 from pathlib import Path
 import streamlit as st
@@ -29,7 +30,21 @@ if "agent" not in st.session_state:
 
 with st.sidebar:
     st.header("Run settings")
-    mode = st.radio("Model backend", ["OpenAI (live)", "Scripted demonstration"], index=0,
+    live_configured = bool(os.environ.get("OPENAI_API_KEY"))
+    live_access_password = os.environ.get("DOCPILOT_LIVE_ACCESS_PASSWORD", "")
+    live_available = False
+    if live_configured and live_access_password:
+        password_input = st.text_input("Live model access password", type="password", key="live_access_input",
+                                       help="Required to prevent public visitors from using your paid OpenAI API key.")
+        live_available = hmac.compare_digest(password_input, live_access_password)
+        if not live_available:
+            st.caption("Public demo available. Enter the access password to unlock paid OpenAI calls.")
+    elif not live_configured:
+        st.caption("Live OpenAI mode requires a server-side OPENAI_API_KEY. Scripted demonstration works without it.")
+    else:
+        st.caption("Live OpenAI mode is locked until DOCPILOT_LIVE_ACCESS_PASSWORD is configured on Railway.")
+    choices = ["Scripted demonstration", "OpenAI (live)"] if live_available else ["Scripted demonstration"]
+    mode = st.radio("Model backend", choices, index=0,
                     help="Scripted tests do not call any LLM and are not evidence of live model quality.")
     budget = st.number_input("Maximum USD per task", min_value=0.001, max_value=1.0, value=0.03, step=0.005, format="%.3f")
     turns = st.slider("Maximum model turns", 1, 20, 8)
@@ -80,8 +95,8 @@ with chat_tab:
                 backend = ScriptedBackend(spec["steps"])
                 actual_question = spec["question"]
             else:
-                if not os.environ.get("OPENAI_API_KEY"):
-                    raise ValueError("OPENAI_API_KEY is not configured on the server. Use Scripted demonstration until configured.")
+                if not live_available or not os.environ.get("OPENAI_API_KEY"):
+                    raise ValueError("Live OpenAI mode is locked or unconfigured.")
                 backend = OpenAIBackend()
                 actual_question = question
             agent = Agent(store, backend)

@@ -75,7 +75,7 @@ Each fixture log labels its backend `scripted_fixture` and includes the terminat
 
 ## Railway deployment
 
-The repository includes `railway.json` and a `Procfile`. Create a Railway web service from this GitHub repository, provide `OPENAI_API_KEY` as a **secret**, and provision a **persistent volume mounted at `/data`**. Set `DOCPILOT_DB=/data/docpilot.sqlite3`. Railway can infer the Python install from `requirements.txt`; start command runs Streamlit on `$PORT`. Publicly expose the service through a Railway domain and visit `/_stcore/health` to verify it is live.
+The repository includes a reproducible Python 3.12 `Dockerfile`, `railway.json`, and fallback `Procfile`. Connect the GitHub repository to a Railway web service. Add a persistent volume mounted at `/data`, then set `DOCPILOT_DB=/data/docpilot.sqlite3`. The application listens on **port 8501** regardless of whether Railway provides a `PORT` environment variable. Under the Railway service domain, set **target port 8501**. Use the health endpoint `/_stcore/health` to verify startup. Set `OPENAI_API_KEY` as a private service variable only if you want live OpenAI calls; otherwise the interface automatically selects the scripted demonstration.
 
 Without a persistent Railway volume, SQLite contents are lost across container replacements. Streamlit's local session state also resets after a restart; copy and reuse your session UUID through the CLI if testing durability. Keep the demo restricted to non-sensitive sample documents.
 
@@ -85,7 +85,7 @@ Without a persistent Railway volume, SQLite contents are lost across container r
 app.py                         Streamlit interface
 agent_spec.md                  Agent requirements, boundaries, examples
 cost_analysis.md               Provider rates and audit formula
-railway.json / Procfile        Deployment configuration
+Dockerfile / railway.json       Reproducible build and deployment configuration
 docpilot/agent.py              Single agent loop, budget and approvals
 docpilot/mcp_client.py         Real stdio MCP client
 docpilot/mcp_server.py         Real stdio MCP server
@@ -115,3 +115,14 @@ Send the repository and demo links in the email body, with subject `Full Name - 
 - Cost checks are conservative estimates, **not** a guarantee against all provider billing behavior or billing delays.
 
 MIT licensed. See [`LICENSE`](LICENSE).
+
+## Public deployment access control
+
+The public Streamlit URL starts in **Scripted demonstration** mode (no API calls).
+The **OpenAI (live)** option appears only when the deployment has **both**
+`OPENAI_API_KEY` and `DOCPILOT_LIVE_ACCESS_PASSWORD` environment variables
+configured, and the visitor enters the correct access password in the sidebar.
+Do not publish the password or API key in the repository; rotate any key that
+was pasted into a chat or otherwise exposed. A password gate is an anti-abuse
+measure for this educational demo, **not** a substitute for a production
+authentication/authorization system.
