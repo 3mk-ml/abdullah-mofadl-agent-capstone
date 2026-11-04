@@ -104,10 +104,16 @@ class Storage:
 
     def list_documents(self, owner: str) -> list[dict]:
         with self.connection() as conn:
-            rows = conn.execute("""SELECT d.id, d.title, d.kind, d.created_at, COUNT(p.page_no) AS page_count
+            rows = conn.execute("""SELECT d.id, d.title, d.kind, d.sha256, d.created_at, COUNT(p.page_no) AS page_count
                 FROM documents d JOIN pages p ON p.document_id=d.id
                 WHERE d.owner=? GROUP BY d.id ORDER BY d.created_at DESC""", (owner,)).fetchall()
             return [dict(r) for r in rows]
+
+    def delete_document(self, owner: str, document_id: str) -> bool:
+        """Delete only the current owner's document and its indexed pages."""
+        with self.connection() as conn:
+            result = conn.execute("DELETE FROM documents WHERE owner=? AND id=?", (owner, document_id))
+            return result.rowcount > 0
 
     def get_pages(self, owner: str, doc_id: str | None = None) -> list[dict]:
         query = """SELECT d.id AS document_id, d.title, p.page_no, p.body

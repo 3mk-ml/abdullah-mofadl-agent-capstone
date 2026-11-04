@@ -2,7 +2,26 @@
 
 A **single-agent document processor** with OpenAI Responses function calling, a real custom MCP JSON-RPC stdio server, persistent SQLite memory, human approval for writes, execution traces, prompt-injection test fixtures, and per-task cost accounting.
 
-> **Honest evidence:** `traces/success_1.jsonl`, `traces/near_failure_recovery.jsonl`, and `traces/explicit_failure.jsonl` are **scripted controller/integration fixtures**, not live LLM evaluations. Execute the live test procedure below before representing the system as fully validated against a model. No live public URL is asserted here until deployed.
+> **Live application:** https://docpilot-production-7d0c.up.railway.app (Railway service, custom MCP and SQLite volume).
+
+> **Honest evidence:** `traces/success_1.jsonl`, `traces/near_failure_recovery.jsonl`, and `traces/explicit_failure.jsonl` are **scripted controller/integration fixtures**, not live LLM evaluations. Execute the live test procedure below before representing the system as fully validated against a model. The public demo is deployed, but live-model evaluation still needs separate verification.
+
+## Polished Streamlit workspace
+
+The updated application has five dedicated screens: **Overview**, **Documents**, **Agent studio**, **Memory & reports**, and **Audit & costs**. It includes a responsive, branded navigation sidebar and live status cards for indexed documents, source pages, approved reports and API spend.
+
+**Using your own documents**
+
+1. Open **Documents**, select a text-based PDF, TXT, or Markdown document; files **index automatically when selected**, with no extra import button. The indexed library displays each file and its page count.
+2. Preview extracted text and search for a known keyword to confirm the file was indexed.
+3. Open **Agent studio**, choose **My documents**, enter the private live-access password in the sidebar, select a task and run the agent. Only this mode uses uploaded files and makes live OpenAI calls.
+4. Inspect the grounded answer, trace, citation references and cost details.
+
+**Guided evaluation demo** is separate: it uses three synthetic fixtures and a scripted model replacement, never your personal uploaded documents or live OpenAI credits. The UI labels this distinction prominently.
+
+Session continuity: the app stores a randomly generated `ws` workspace identifier in the URL and uses SQLite persistence so uploaded documents remain available across ordinary browser refreshes. **The workspace link is a bearer identifier, not authentication**. Anyone with the link may access that workspace; never upload private or sensitive documents to this public classroom demonstration.
+
+Live OpenAI is additionally gated by `DOCPILOT_LIVE_ACCESS_PASSWORD`. Passwords and API keys are Railway environment variables and must never be included in Git or traces.
 
 ## What it can do
 
@@ -75,9 +94,9 @@ Each fixture log labels its backend `scripted_fixture` and includes the terminat
 
 ## Railway deployment
 
-The repository includes a reproducible Python 3.12 `Dockerfile`, `railway.json`, and fallback `Procfile`. Connect the GitHub repository to a Railway web service. Add a persistent volume mounted at `/data`, then set `DOCPILOT_DB=/data/docpilot.sqlite3`. The application listens on **port 8501** regardless of whether Railway provides a `PORT` environment variable. Under the Railway service domain, set **target port 8501**. Use the health endpoint `/_stcore/health` to verify startup. Set `OPENAI_API_KEY` as a private service variable only if you want live OpenAI calls; otherwise the interface automatically selects the scripted demonstration.
+The repository includes a reproducible Python 3.12 `Dockerfile`, `railway.json`, and fallback `Procfile`. Connect the GitHub repository to a Railway web service. Add a persistent volume mounted at `/data`, then set `DOCPILOT_DB=/data/docpilot.sqlite3`. The application listens on **port 8501** regardless of whether Railway provides a `PORT` environment variable. Under the Railway service domain, set **target port 8501**. Use the health endpoint `/_stcore/health` to verify startup. Set `OPENAI_API_KEY` and `DOCPILOT_LIVE_ACCESS_PASSWORD` as private Railway service variables. Personal-document live runs remain locked without the access password; the independent scripted evaluation is still available without an API key.
 
-Without a persistent Railway volume, SQLite contents are lost across container replacements. Streamlit's local session state also resets after a restart; copy and reuse your session UUID through the CLI if testing durability. Keep the demo restricted to non-sensitive sample documents.
+Without a persistent Railway volume, SQLite contents are lost across container replacements. For browser users, the URL `ws` parameter restores the same workspace across ordinary refreshes; do not share this bearer link. For CLI durability testing, retain and reuse the session UUID. Keep the demo restricted to non-sensitive sample documents.
 
 ## Project structure
 
@@ -102,9 +121,9 @@ traces/                        Mandatory three JSONL examples
 
 **GitHub repository:** https://github.com/3mk-ml/abdullah-mofadl-agent-capstone
 
-**Live demo:** pending successful Railway deployment and key configuration.
+**Live demo:** https://docpilot-production-7d0c.up.railway.app
 
-Send the repository and demo links in the email body, with subject `Full Name - Track B - Week 5`. Disclose incomplete live testing or missing deployment openly. The original deadline specified was November 1, 2026.
+Send the repository and demo links in the email body, with subject `Full Name - Track B - Week 5`. Disclose incomplete live testing or missing deployment openly. The original deadline specified was November 1, 2026; disclose late submission if no extension was granted.
 
 ## Safety notes
 
@@ -115,14 +134,3 @@ Send the repository and demo links in the email body, with subject `Full Name - 
 - Cost checks are conservative estimates, **not** a guarantee against all provider billing behavior or billing delays.
 
 MIT licensed. See [`LICENSE`](LICENSE).
-
-## Public deployment access control
-
-The public Streamlit URL starts in **Scripted demonstration** mode (no API calls).
-The **OpenAI (live)** option appears only when the deployment has **both**
-`OPENAI_API_KEY` and `DOCPILOT_LIVE_ACCESS_PASSWORD` environment variables
-configured, and the visitor enters the correct access password in the sidebar.
-Do not publish the password or API key in the repository; rotate any key that
-was pasted into a chat or otherwise exposed. A password gate is an anti-abuse
-measure for this educational demo, **not** a substitute for a production
-authentication/authorization system.

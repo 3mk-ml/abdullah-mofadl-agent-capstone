@@ -14,8 +14,9 @@ def test_railway_docker_start_command_is_stable():
     assert 'EXPOSE 8501' in (ROOT / 'Dockerfile').read_text()
 
 
-def test_demo_defaults_to_scripted_without_api_key():
+def test_delivery_ui_mentions_workspace_separation_and_live_lock():
     src = (ROOT / 'app.py').read_text()
-    assert 'choices = ["Scripted demonstration", "OpenAI (live)"] if live_available else ["Scripted demonstration"]' in src
-    assert 'hmac.compare_digest(password_input, live_access_password)' in src
-    assert 'if not live_available or not os.environ.get("OPENAI_API_KEY")' in src
+    assert 'My documents' in src
+    assert 'Guided evaluation demo' in src
+    assert 'DOCPILOT_LIVE_ACCESS_PASSWORD' in src
+    assert 'The two sources never mix.' in src
